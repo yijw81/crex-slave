@@ -1,0 +1,28 @@
+{
+  "name": "fake-car-wash-machine-slave",
+  "version": "1.0.0",
+  "description": "Electron desktop demo app that emulates a car wash machine Modbus RTU slave over RS-485.",
+  "main": "dist/main/main.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "npm run build && electron .",
+    "dev": "tsc -w -p tsconfig.json"
+  },
+  "keywords": [
+    "electron",
+    "modbus",
+    "rs485",
+    "serialport",
+    "simulation"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "electron": "^36.2.1",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "serialport": "^12.0.0"
+  }
+}
