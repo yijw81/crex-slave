@@ -119,35 +119,6 @@
         alert(`HTML inline Test Alert fired.\n${now}`);
       };
     </script>
-    <script>
-      (function loadRendererScript() {
-        const candidates = [
-          '../../dist/renderer/renderer.js',
-          '../dist/renderer/renderer.js',
-          './renderer.js'
-        ];
-
-        const target = document.getElementById('connectionStatus');
-
-        const tryNext = (index) => {
-          if (index >= candidates.length) {
-            const message = 'Renderer script load failed. Check build output (dist/renderer/renderer.js).';
-            if (target) target.textContent = message;
-            alert(message);
-            return;
-          }
-
-          const script = document.createElement('script');
-          script.src = candidates[index];
-          script.onload = () => {
-            if (target) target.textContent = `Renderer script loaded: ${candidates[index]}`;
-          };
-          script.onerror = () => tryNext(index + 1);
-          document.body.appendChild(script);
-        };
-
-        tryNext(0);
-      })();
-    </script>
+    <script src="./renderer.js"></script>
   </body>
 </html>
