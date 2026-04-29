@@ -57,6 +57,7 @@ npm start
 - Connect/Disconnect 동작 시 성공/실패 결과가 팝업(alert)으로도 표시됩니다.
 - Connect/Disconnect가 5초 이상 응답이 없으면 timeout 실패 팝업을 표시합니다.
 - UI가 최신 코드로 실행 중인지 확인하려면 **Test Alert** 버튼을 눌러 즉시 팝업/로그가 뜨는지 확인하세요.
+- Test Alert 클릭 시 팝업이 전혀 없으면 renderer 번들 로딩 전 단계 문제일 수 있습니다. 이 경우 `connectionStatus`가 `HTML inline handler fired ...`로 바뀌는지 먼저 확인하세요.
 
 - 기본 통신 설정:
   - Baudrate: 9600

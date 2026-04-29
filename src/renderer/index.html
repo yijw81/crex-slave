@@ -55,7 +55,7 @@
         <div class="row">
           <button id="connectBtn">Connect</button>
           <button id="disconnectBtn" class="secondary">Disconnect</button>
-          <button id="testAlertBtn" class="secondary">Test Alert</button>
+          <button id="testAlertBtn" class="secondary" onclick="window.__htmlTestAlert && window.__htmlTestAlert()">Test Alert</button>
         </div>
         <div class="small" id="connectionStatus">Disconnected</div>
 
@@ -111,6 +111,14 @@
         <div id="logView" class="log"></div>
       </div>
     </div>
+    <script>
+      window.__htmlTestAlert = function () {
+        const target = document.getElementById('connectionStatus');
+        const now = new Date().toISOString();
+        if (target) target.textContent = `HTML inline handler fired @ ${now}`;
+        alert(`HTML inline Test Alert fired.\n${now}`);
+      };
+    </script>
     <script src="../../dist/renderer/renderer.js"></script>
   </body>
 </html>
