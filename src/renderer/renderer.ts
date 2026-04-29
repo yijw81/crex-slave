@@ -219,12 +219,15 @@ connectBtn.addEventListener('click', async () => {
   }
 
   connectionStatus.textContent = `Connecting: ${selectedPath} ...`;
+  connectBtn.disabled = true;
+  disconnectBtn.disabled = true;
   try {
-    await window.api.connect({
+    const connectPromise = window.api.connect({
       path: selectedPath,
       baudRate: Number(baudRate.value) || 9600,
       slaveId: Number(slaveId.value) || 1
     });
+    await withTimeout(connectPromise, 5000, `Connect timeout after 5s (${selectedPath})`);
     alert(`Connected: ${selectedPath}`);
   } catch (error) {
     const message = (error as Error).message;
@@ -235,12 +238,17 @@ connectBtn.addEventListener('click', async () => {
     });
     connectionStatus.textContent = `Connect failed: ${message}`;
     alert(`Connect failed (${selectedPath})\n${message}`);
+  } finally {
+    connectBtn.disabled = false;
+    disconnectBtn.disabled = false;
   }
 });
 
 disconnectBtn.addEventListener('click', async () => {
+  disconnectBtn.disabled = true;
+  connectBtn.disabled = true;
   try {
-    await window.api.disconnect();
+    await withTimeout(window.api.disconnect(), 5000, 'Disconnect timeout after 5s');
     alert('Disconnected');
   } catch (error) {
     appendLog({
@@ -249,6 +257,9 @@ disconnectBtn.addEventListener('click', async () => {
       message: `Disconnect failed: ${(error as Error).message}`
     });
     alert(`Disconnect failed\n${(error as Error).message}`);
+  } finally {
+    disconnectBtn.disabled = false;
+    connectBtn.disabled = false;
   }
 });
 
@@ -276,3 +287,18 @@ boot().catch((error) => {
     message: `UI boot failed: ${(error as Error).message}`
   });
 });
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, timeoutMessage: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs);
+    promise
+      .then((value) => {
+        clearTimeout(timer);
+        resolve(value);
+      })
+      .catch((error) => {
+        clearTimeout(timer);
+        reject(error);
+      });
+  });
+}
