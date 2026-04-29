@@ -119,6 +119,12 @@
         alert(`HTML inline Test Alert fired.\n${now}`);
       };
     </script>
+    <script>
+      // renderer.ts is transpiled with CommonJS, which emits `exports` access.
+      // In BrowserWindow DOM context there is no Node `exports` global by default.
+      // Define a harmless shim so renderer.js can run and register button handlers.
+      window.exports = window.exports || {};
+    </script>
     <script src="./renderer.js"></script>
   </body>
 </html>
