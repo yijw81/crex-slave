@@ -2,6 +2,8 @@ import { LogEntry, PortInfo, UiState } from '../shared/types';
 
 const portSelect = document.getElementById('portSelect') as HTMLSelectElement;
 const refreshPorts = document.getElementById('refreshPorts') as HTMLButtonElement;
+const portInput = document.getElementById('portInput') as HTMLInputElement;
+const portDebug = document.getElementById('portDebug') as HTMLDivElement;
 const baudRate = document.getElementById('baudRate') as HTMLInputElement;
 const slaveId = document.getElementById('slaveId') as HTMLInputElement;
 const connectBtn = document.getElementById('connectBtn') as HTMLButtonElement;
@@ -53,6 +55,20 @@ function renderPorts(ports: PortInfo[]): void {
     option.text = `${port.path}${port.manufacturer ? ` (${port.manufacturer})` : ''}`;
     portSelect.appendChild(option);
   });
+
+  if (ports.length > 0) {
+    portDebug.textContent = `Detected ${ports.length} port(s): ${ports.map((port) => port.path).join(', ')}`;
+    const preferred = ports.find((port) => port.path.toUpperCase() === portInput.value.toUpperCase());
+    if (preferred) {
+      portSelect.value = preferred.path;
+      portInput.value = preferred.path;
+    } else {
+      portInput.value = ports[0].path;
+      portSelect.value = ports[0].path;
+    }
+  } else {
+    portDebug.textContent = 'No ports detected from SerialPort.list(). You can still type COM port manually (e.g., COM3).';
+  }
 }
 
 async function refreshPortList(): Promise<void> {
@@ -186,8 +202,18 @@ refreshPorts.addEventListener('click', () => {
 });
 
 connectBtn.addEventListener('click', async () => {
+  const selectedPath = (portInput.value || portSelect.value || '').trim();
+  if (!selectedPath) {
+    appendLog({
+      timestamp: new Date().toISOString(),
+      level: 'error',
+      message: 'Port is empty. Enter COM port manually (e.g., COM3).'
+    });
+    return;
+  }
+
   await window.api.connect({
-    path: portSelect.value,
+    path: selectedPath,
     baudRate: Number(baudRate.value) || 9600,
     slaveId: Number(slaveId.value) || 1
   });

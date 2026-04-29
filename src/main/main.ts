@@ -108,14 +108,20 @@ app.on('before-quit', async () => {
 });
 
 ipcMain.handle('serial:listPorts', async () => {
-  const ports = await SerialPort.list();
-  return ports.map((port) => ({
-    path: port.path,
-    manufacturer: port.manufacturer,
-    serialNumber: port.serialNumber,
-    vendorId: port.vendorId,
-    productId: port.productId
-  }));
+  try {
+    const ports = await SerialPort.list();
+    pushLog('info', `SerialPort.list() returned ${ports.length} port(s).`);
+    return ports.map((port) => ({
+      path: port.path,
+      manufacturer: port.manufacturer,
+      serialNumber: port.serialNumber,
+      vendorId: port.vendorId,
+      productId: port.productId
+    }));
+  } catch (error) {
+    pushLog('error', `SerialPort.list() failed: ${(error as Error).message}`);
+    return [];
+  }
 });
 
 ipcMain.handle('serial:connect', async (_event, settings: SerialSettings) => {

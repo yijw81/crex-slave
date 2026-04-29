@@ -37,11 +37,14 @@
     <div class="layout">
       <div class="panel">
         <h2>Serial Connection</h2>
-        <label for="portSelect">Port</label>
+        <label for="portSelect">Port (Detected)</label>
         <select id="portSelect"></select>
+        <label for="portInput">Port (Manual override)</label>
+        <input id="portInput" type="text" placeholder="COM3" value="COM3" />
         <div class="row">
           <button id="refreshPorts" class="secondary">Refresh</button>
         </div>
+        <div class="small" id="portDebug">No port list loaded yet.</div>
 
         <label for="baudRate">Baudrate</label>
         <input id="baudRate" type="number" value="9600" />

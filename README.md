@@ -49,6 +49,10 @@ npm install
 npm start
 ```
 
+### Windows 포트가 목록에 안 뜰 때
+
+- 장치관리자에서 `USB Serial Port (COMx)`가 보이면, 앱에서 **Port (Manual override)** 에 `COMx`를 직접 입력 후 Connect를 시도하세요.
+- 포트 조회는 `SerialPort.list()` 결과에 의존하므로, 일부 환경에서 자동 감지가 누락될 수 있습니다.
 - 기본 통신 설정:
   - Baudrate: 9600
   - Data bits: 8
