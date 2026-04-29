@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fake Car Wash Machine Slave</title>
+    <style>
+      :root { font-family: Inter, Segoe UI, Arial, sans-serif; }
+      body { margin: 0; background: #0f172a; color: #e2e8f0; }
+      h1,h2,h3 { margin: 8px 0; }
+      .layout { display: grid; grid-template-columns: 360px 1fr 430px; gap: 12px; padding: 12px; }
+      .panel { background:#1e293b; border-radius:10px; padding:12px; border:1px solid #334155; }
+      label { display:block; margin:8px 0 4px; font-size:12px; }
+      input, select, button { font-size: 13px; }
+      input, select { width:100%; background:#0b1220; color:#e2e8f0; border:1px solid #334155; border-radius:6px; padding:7px; }
+      button { background:#2563eb; color:white; border:0; border-radius:6px; padding:7px 10px; cursor:pointer; margin-right:6px; margin-top:6px; }
+      button.secondary { background:#475569; }
+      button.danger { background:#b91c1c; }
+      .status-grid { display:grid; grid-template-columns: 1fr 1fr; gap:8px; }
+      .registers { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size:12px; background:#0b1220; border:1px solid #334155; border-radius:6px; padding:8px; max-height:180px; overflow:auto; }
+      .log { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background:#020617; border:1px solid #334155; border-radius:6px; height:780px; overflow:auto; padding:8px; font-size:12px; white-space:pre-wrap; }
+      .log-line { margin-bottom:4px; }
+      .log-rx { color:#22d3ee; }
+      .log-tx { color:#34d399; }
+      .log-state { color:#fbbf24; }
+      .log-error { color:#f87171; }
+      .bitbox { background:#0b1220; border:1px solid #334155; border-radius:6px; padding:8px; margin-top:8px; max-height:165px; overflow:auto; }
+      .bitbox label { font-size:12px; margin:4px 0; display:flex; gap:8px; align-items:center; }
+      .section { margin-top:10px; padding-top:10px; border-top:1px solid #334155; }
+      .row { display:flex; gap:8px; }
+      .small { font-size:11px; color:#94a3b8; }
+      .badge { background:#334155; padding:2px 8px; border-radius:999px; font-size:11px; }
+      .delay-grid { display:grid; grid-template-columns: 1fr auto; gap:6px; align-items:center; }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <div class="panel">
+        <h2>Serial Connection</h2>
+        <label for="portSelect">Port (Detected)</label>
+        <select id="portSelect"></select>
+        <label for="portInput">Port (Manual override)</label>
+        <input id="portInput" type="text" placeholder="COM3" value="COM3" />
+        <div class="row">
+          <button id="refreshPorts" class="secondary">Refresh</button>
+        </div>
+        <div class="small" id="portDebug">No port list loaded yet.</div>
+
+        <label for="baudRate">Baudrate</label>
+        <input id="baudRate" type="number" value="9600" />
+
+        <label for="slaveId">Slave ID</label>
+        <input id="slaveId" type="number" value="1" min="1" max="247" />
+
+        <div class="row">
+          <button id="connectBtn">Connect</button>
+          <button id="disconnectBtn" class="secondary">Disconnect</button>
+        </div>
+        <div class="small" id="connectionStatus">Disconnected</div>
+
+        <div class="section">
+          <h3>Registers</h3>
+          <div id="registerView" class="registers"></div>
+        </div>
+
+        <div class="section">
+          <h3>Manual Status</h3>
+          <select id="statusSelect"></select>
+          <button id="setStatusBtn" class="secondary">Apply Status</button>
+        </div>
+
+        <div class="section">
+          <h3>Simulation Delays (ms)</h3>
+          <div id="delayContainer"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Fault & Alarm Controls</h2>
+        <div class="row">
+          <button id="forceFaultBtn" class="danger">Force Fault(9)</button>
+          <button id="clearFaultBtn" class="secondary">Clear Faults</button>
+        </div>
+
+        <div class="section">
+          <h3>Fault Code 1 (0x0282)</h3>
+          <div id="fault1Bits" class="bitbox"></div>
+        </div>
+
+        <div class="section">
+          <h3>Fault Code 2 (0x0283)</h3>
+          <div id="fault2Bits" class="bitbox"></div>
+        </div>
+
+        <div class="section">
+          <h3>Alarm Code (0x0286)</h3>
+          <div id="alarmBits" class="bitbox"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="row" style="justify-content:space-between; align-items:center;">
+          <h2>Logs</h2>
+          <div>
+            <span class="badge" id="simBadge">Simulation: stopped</span>
+            <button id="clearLogsBtn" class="secondary">Clear Logs</button>
+          </div>
+        </div>
+        <div class="small">RX/TX frames are shown as HEX strings.</div>
+        <div id="logView" class="log"></div>
+      </div>
+    </div>
+    <script src="../../dist/renderer/renderer.js"></script>
+  </body>
+</html>
