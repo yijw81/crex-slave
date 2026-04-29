@@ -4,7 +4,7 @@
   "description": "Electron desktop demo app that emulates a car wash machine Modbus RTU slave over RS-485.",
   "main": "dist/main/main.js",
   "scripts": {
-    "build": "tsc -p tsconfig.json && mkdir -p dist/renderer && cp src/renderer/index.html dist/renderer/index.html",
+    "build": "tsc -p tsconfig.json && node -e \"const fs=require('node:fs'); fs.mkdirSync('dist/renderer',{recursive:true}); fs.copyFileSync('src/renderer/index.html','dist/renderer/index.html');\"",
     "start": "npm run build && electron .",
     "dev": "tsc -w -p tsconfig.json"
   },
