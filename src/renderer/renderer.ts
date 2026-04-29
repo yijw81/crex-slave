@@ -8,6 +8,7 @@ const baudRate = document.getElementById('baudRate') as HTMLInputElement;
 const slaveId = document.getElementById('slaveId') as HTMLInputElement;
 const connectBtn = document.getElementById('connectBtn') as HTMLButtonElement;
 const disconnectBtn = document.getElementById('disconnectBtn') as HTMLButtonElement;
+const testAlertBtn = document.getElementById('testAlertBtn') as HTMLButtonElement;
 const connectionStatus = document.getElementById('connectionStatus') as HTMLDivElement;
 const registerView = document.getElementById('registerView') as HTMLDivElement;
 const statusSelect = document.getElementById('statusSelect') as HTMLSelectElement;
@@ -201,6 +202,16 @@ refreshPorts.addEventListener('click', () => {
   refreshPortList();
 });
 
+testAlertBtn.addEventListener('click', () => {
+  const now = new Date().toISOString();
+  appendLog({
+    timestamp: now,
+    level: 'info',
+    message: 'Test Alert button clicked'
+  });
+  alert(`UI script is active.\n${now}`);
+});
+
 portSelect.addEventListener('change', () => {
   if (portSelect.value) {
     portInput.value = portSelect.value;
@@ -285,6 +296,23 @@ boot().catch((error) => {
     timestamp: new Date().toISOString(),
     level: 'error',
     message: `UI boot failed: ${(error as Error).message}`
+  });
+});
+
+window.addEventListener('error', (event) => {
+  appendLog({
+    timestamp: new Date().toISOString(),
+    level: 'error',
+    message: `Window error: ${event.message}`
+  });
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  const reason = event.reason instanceof Error ? event.reason.message : String(event.reason);
+  appendLog({
+    timestamp: new Date().toISOString(),
+    level: 'error',
+    message: `Unhandled promise rejection: ${reason}`
   });
 });
 

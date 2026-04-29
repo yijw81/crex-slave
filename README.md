@@ -56,6 +56,7 @@ npm start
 - Connect 실패 시 우측 로그에 `Connect failed (COMx): ...` 메시지가 표시됩니다. (포트 점유/권한/잘못된 포트명 확인)
 - Connect/Disconnect 동작 시 성공/실패 결과가 팝업(alert)으로도 표시됩니다.
 - Connect/Disconnect가 5초 이상 응답이 없으면 timeout 실패 팝업을 표시합니다.
+- UI가 최신 코드로 실행 중인지 확인하려면 **Test Alert** 버튼을 눌러 즉시 팝업/로그가 뜨는지 확인하세요.
 
 - 기본 통신 설정:
   - Baudrate: 9600
