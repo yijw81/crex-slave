@@ -167,6 +167,7 @@ ipcMain.handle('state:get', () => {
 
 ipcMain.handle('ui:setStatus', (_event, status: number) => {
   registers.writeRegister(REG_MACHINE_STATUS, status);
+  pushLog('info', `Manual register write (local UI, no Modbus RX/TX): addr=0x${REG_MACHINE_STATUS.toString(16).padStart(4, '0')}, value=0x${status.toString(16).padStart(4, '0')} (${status})`);
   pushLog('state', `Manual status set: ${machineStatusLabel[status] ?? status}`);
   publishState();
 });
