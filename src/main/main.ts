@@ -125,11 +125,18 @@ ipcMain.handle('serial:listPorts', async () => {
 });
 
 ipcMain.handle('serial:connect', async (_event, settings: SerialSettings) => {
-  currentSettings = settings;
-  slave.setSlaveId(settings.slaveId);
-  await slave.open(settings.path, settings.baudRate);
-  publishState();
-  return true;
+  try {
+    currentSettings = settings;
+    slave.setSlaveId(settings.slaveId);
+    pushLog('info', `Connecting to ${settings.path} @ ${settings.baudRate}, slaveId=${settings.slaveId}`);
+    await slave.open(settings.path, settings.baudRate);
+    publishState();
+    return true;
+  } catch (error) {
+    const message = (error as Error).message;
+    pushLog('error', `Connect failed (${settings.path}): ${message}`);
+    throw new Error(message);
+  }
 });
 
 ipcMain.handle('serial:disconnect', async () => {

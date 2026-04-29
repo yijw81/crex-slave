@@ -201,6 +201,12 @@ refreshPorts.addEventListener('click', () => {
   refreshPortList();
 });
 
+portSelect.addEventListener('change', () => {
+  if (portSelect.value) {
+    portInput.value = portSelect.value;
+  }
+});
+
 connectBtn.addEventListener('click', async () => {
   const selectedPath = (portInput.value || portSelect.value || '').trim();
   if (!selectedPath) {
@@ -212,15 +218,34 @@ connectBtn.addEventListener('click', async () => {
     return;
   }
 
-  await window.api.connect({
-    path: selectedPath,
-    baudRate: Number(baudRate.value) || 9600,
-    slaveId: Number(slaveId.value) || 1
-  });
+  connectionStatus.textContent = `Connecting: ${selectedPath} ...`;
+  try {
+    await window.api.connect({
+      path: selectedPath,
+      baudRate: Number(baudRate.value) || 9600,
+      slaveId: Number(slaveId.value) || 1
+    });
+  } catch (error) {
+    const message = (error as Error).message;
+    appendLog({
+      timestamp: new Date().toISOString(),
+      level: 'error',
+      message: `Connect failed (${selectedPath}): ${message}`
+    });
+    connectionStatus.textContent = `Connect failed: ${message}`;
+  }
 });
 
 disconnectBtn.addEventListener('click', async () => {
-  await window.api.disconnect();
+  try {
+    await window.api.disconnect();
+  } catch (error) {
+    appendLog({
+      timestamp: new Date().toISOString(),
+      level: 'error',
+      message: `Disconnect failed: ${(error as Error).message}`
+    });
+  }
 });
 
 setStatusBtn.addEventListener('click', async () => {
