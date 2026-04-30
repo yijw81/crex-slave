@@ -137,7 +137,6 @@ function renderStatusOptions(statuses: Record<string, string>): void {
 }
 
 function renderDelays(state: UiState): void {
-  delayContainer.innerHTML = '';
   const labels = [
     'Idle→Reversing',
     'Reversing→Parked',
@@ -149,6 +148,20 @@ function renderDelays(state: UiState): void {
     '1st Dry→Complete',
     'Complete→Idle'
   ];
+
+  const existingInputs = Array.from(delayContainer.querySelectorAll('input[type="number"]')) as HTMLInputElement[];
+
+  if (existingInputs.length === state.delays.length) {
+    state.delays.forEach((delay, index) => {
+      const input = existingInputs[index];
+      if (document.activeElement !== input) {
+        input.value = `${delay}`;
+      }
+    });
+    return;
+  }
+
+  delayContainer.innerHTML = '';
 
   state.delays.forEach((delay, index) => {
     const wrapper = document.createElement('div');
@@ -176,6 +189,12 @@ function renderState(state: UiState): void {
   latestState = state;
   connectionStatus.textContent = state.connected ? `Connected: ${state.portPath}` : 'Disconnected';
   simBadge.textContent = state.simulationRunning ? 'Simulation: running' : 'Simulation: stopped';
+
+  const currentStatus = state.registers['0x028A'];
+  if (currentStatus !== undefined) {
+    statusSelect.value = String(currentStatus);
+  }
+
   renderRegisters(state);
   renderDelays(state);
   syncBitSelectionFromState(state);
