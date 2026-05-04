@@ -11,7 +11,7 @@ interface Logger {
 const DEFAULT_SEQUENCE = [2, 3, 4, 5, 6, 7, 8, 10, 1];
 
 export class WashSimulationEngine {
-  private readonly delaysMs: number[] = [1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200];
+  private readonly delaysMs: number[] = [2000, 3000, 4000, 5000, 6000, 5000, 4000, 6000, 1200];
 
   private currentTimer: NodeJS.Timeout | null = null;
 
