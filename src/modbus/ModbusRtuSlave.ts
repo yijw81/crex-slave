@@ -136,15 +136,22 @@ export class ModbusRtuSlave {
 
     this.events.onLog('rx', toHex(frame));
 
-    if (!ModbusCrc.isValid(frame)) {
-      this.events.onLog('error', `CRC invalid; ignoring frame: ${toHex(frame)}`);
-      return;
-    }
-
     const slaveId = frame[0];
     const fc = frame[1];
     const address = frame.readUInt16BE(2);
     const valueOrQuantity = frame.readUInt16BE(4);
+
+    if (fc === FC_WRITE_SINGLE) {
+      this.events.onLog(
+        'info',
+        `[WRITE] RX=${toHex(frame)} slave=${slaveId} addr=0x${address.toString(16).padStart(4, '0')} value=0x${valueOrQuantity.toString(16).padStart(4, '0')} (${valueOrQuantity})`
+      );
+    }
+
+    if (!ModbusCrc.isValid(frame)) {
+      this.events.onLog('error', `CRC invalid; ignoring frame: ${toHex(frame)}`);
+      return;
+    }
 
     this.events.onLog('info', `Incoming request parsed: slave=${slaveId}, fc=0x${fc.toString(16).padStart(2, '0')}, addr=0x${address.toString(16).padStart(4, '0')}, value/qty=${valueOrQuantity}`);
 
@@ -198,7 +205,7 @@ export class ModbusRtuSlave {
     this.write(response);
   }
 
-  private handleWriteSingle(requestFrame: Buffer, slaveId: number, address: number, value: number): void {
+  private handleWriteSingle(slaveId: number, address: number, value: number): void {
     this.registers.writeRegister(address, value);
 
     if (address === REG_START && value >= 1 && value <= 6) {
@@ -219,10 +226,7 @@ export class ModbusRtuSlave {
     body.writeUInt16BE(address, 2);
     body.writeUInt16BE(value, 4);
     const response = ModbusCrc.append(body);
-    this.events.onLog(
-      'info',
-      `[WRITE] RX=${toHex(requestFrame)} TX=${toHex(response)} addr=0x${address.toString(16).padStart(4, '0')} value=0x${value.toString(16).padStart(4, '0')} (${value})`
-    );
+    this.events.onLog('info', `[WRITE] TX=${toHex(response)} addr=0x${address.toString(16).padStart(4, '0')} value=0x${value.toString(16).padStart(4, '0')} (${value})`);
     this.write(response);
 
     if (address === REG_MACHINE_STATUS) {
