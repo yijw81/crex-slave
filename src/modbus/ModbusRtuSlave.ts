@@ -165,7 +165,7 @@ export class ModbusRtuSlave {
     }
 
     if (fc === FC_WRITE_SINGLE) {
-      this.handleWriteSingle(frame, slaveId, address, valueOrQuantity);
+      this.handleWriteSingle(slaveId, address, valueOrQuantity);
       return;
     }
 
