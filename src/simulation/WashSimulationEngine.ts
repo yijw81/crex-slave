@@ -8,7 +8,7 @@ interface Logger {
   (message: string): void;
 }
 
-const DEFAULT_SEQUENCE = [1, 2, 3, 4, 5, 6, 7, 8, 10, 1];
+const DEFAULT_SEQUENCE = [2, 3, 4, 5, 6, 7, 8, 10, 1];
 
 export class WashSimulationEngine {
   private readonly delaysMs: number[] = [1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200];

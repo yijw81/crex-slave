@@ -22,13 +22,16 @@ interface ModbusEvents {
 
 const FC_READ_HOLDING = 0x03;
 const FC_WRITE_SINGLE = 0x06;
+const STREAM_LOG_INTERVAL_MS = 1000;
 
 export class ModbusRtuSlave {
   private port: SerialPort | null = null;
 
   private buffer = Buffer.alloc(0);
 
-  private flushTimer: NodeJS.Timeout | null = null;
+  private lastPartialFrameLogAt = 0;
+
+  private lastResyncLogAt = 0;
 
   public constructor(private readonly registers: RegisterMap, private readonly events: ModbusEvents) {}
 
@@ -63,11 +66,6 @@ export class ModbusRtuSlave {
   }
 
   public async close(): Promise<void> {
-    if (this.flushTimer) {
-      clearTimeout(this.flushTimer);
-      this.flushTimer = null;
-    }
-
     if (!this.port) {
       return;
     }
@@ -89,16 +87,45 @@ export class ModbusRtuSlave {
 
   private onData(chunk: Buffer): void {
     this.buffer = Buffer.concat([this.buffer, chunk]);
+    this.processBufferedFrames();
+  }
 
-    if (this.flushTimer) {
-      clearTimeout(this.flushTimer);
+  private processBufferedFrames(): void {
+    const requestLength = 8;
+
+    while (this.buffer.length >= requestLength) {
+      const frame = this.buffer.subarray(0, requestLength);
+
+      if (!ModbusCrc.isValid(frame)) {
+        this.logWithInterval('resync', 'error', `Discarding byte while seeking valid frame boundary: ${toHex(frame.subarray(0, 1))}`);
+        this.buffer = this.buffer.subarray(1);
+        continue;
+      }
+
+      this.buffer = this.buffer.subarray(requestLength);
+      this.processFrame(frame);
     }
 
-    this.flushTimer = setTimeout(() => {
-      const frame = this.buffer;
-      this.buffer = Buffer.alloc(0);
-      this.processFrame(frame);
-    }, 15);
+    if (this.buffer.length > 0 && this.buffer.length < requestLength) {
+      this.logWithInterval('partial', 'info', `Waiting for more data to complete frame: ${toHex(this.buffer)}`);
+    }
+  }
+
+  private logWithInterval(kind: 'partial' | 'resync', level: 'info' | 'error', message: string): void {
+    const now = Date.now();
+    const lastLogAt = kind === 'partial' ? this.lastPartialFrameLogAt : this.lastResyncLogAt;
+
+    if (now - lastLogAt < STREAM_LOG_INTERVAL_MS) {
+      return;
+    }
+
+    if (kind === 'partial') {
+      this.lastPartialFrameLogAt = now;
+    } else {
+      this.lastResyncLogAt = now;
+    }
+
+    this.events.onLog(level, message);
   }
 
   private processFrame(frame: Buffer): void {
@@ -131,7 +158,7 @@ export class ModbusRtuSlave {
     }
 
     if (fc === FC_WRITE_SINGLE) {
-      this.handleWriteSingle(slaveId, address, valueOrQuantity);
+      this.handleWriteSingle(frame, slaveId, address, valueOrQuantity);
       return;
     }
 
@@ -171,8 +198,7 @@ export class ModbusRtuSlave {
     this.write(response);
   }
 
-  private handleWriteSingle(slaveId: number, address: number, value: number): void {
-    this.events.onLog('info', `Incoming write signal: addr=0x${address.toString(16).padStart(4, '0')}, value=0x${value.toString(16).padStart(4, '0')} (${value})`);
+  private handleWriteSingle(requestFrame: Buffer, slaveId: number, address: number, value: number): void {
     this.registers.writeRegister(address, value);
 
     if (address === REG_START && value >= 1 && value <= 6) {
@@ -193,7 +219,10 @@ export class ModbusRtuSlave {
     body.writeUInt16BE(address, 2);
     body.writeUInt16BE(value, 4);
     const response = ModbusCrc.append(body);
-    this.events.onLog('info', `Outgoing write ack: addr=0x${address.toString(16).padStart(4, '0')}, value=0x${value.toString(16).padStart(4, '0')} (${value})`);
+    this.events.onLog(
+      'info',
+      `[WRITE] RX=${toHex(requestFrame)} TX=${toHex(response)} addr=0x${address.toString(16).padStart(4, '0')} value=0x${value.toString(16).padStart(4, '0')} (${value})`
+    );
     this.write(response);
 
     if (address === REG_MACHINE_STATUS) {

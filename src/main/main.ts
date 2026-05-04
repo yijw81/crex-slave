@@ -26,6 +26,10 @@ let currentSettings: SerialSettings = {
 };
 
 function pushLog(level: LogEntry['level'], message: string): void {
+  if (!message.startsWith('[WRITE]')) {
+    return;
+  }
+
   const entry: LogEntry = {
     timestamp: new Date().toISOString(),
     level,
