@@ -158,7 +158,7 @@ export class ModbusRtuSlave {
     }
 
     if (fc === FC_WRITE_SINGLE) {
-      this.handleWriteSingle(slaveId, address, valueOrQuantity);
+      this.handleWriteSingle(frame, slaveId, address, valueOrQuantity);
       return;
     }
 
@@ -198,8 +198,7 @@ export class ModbusRtuSlave {
     this.write(response);
   }
 
-  private handleWriteSingle(slaveId: number, address: number, value: number): void {
-    this.events.onLog('info', `Incoming write signal: addr=0x${address.toString(16).padStart(4, '0')}, value=0x${value.toString(16).padStart(4, '0')} (${value})`);
+  private handleWriteSingle(requestFrame: Buffer, slaveId: number, address: number, value: number): void {
     this.registers.writeRegister(address, value);
 
     if (address === REG_START && value >= 1 && value <= 6) {
@@ -220,7 +219,10 @@ export class ModbusRtuSlave {
     body.writeUInt16BE(address, 2);
     body.writeUInt16BE(value, 4);
     const response = ModbusCrc.append(body);
-    this.events.onLog('info', `Outgoing write ack: addr=0x${address.toString(16).padStart(4, '0')}, value=0x${value.toString(16).padStart(4, '0')} (${value})`);
+    this.events.onLog(
+      'info',
+      `[WRITE] RX=${toHex(requestFrame)} TX=${toHex(response)} addr=0x${address.toString(16).padStart(4, '0')} value=0x${value.toString(16).padStart(4, '0')} (${value})`
+    );
     this.write(response);
 
     if (address === REG_MACHINE_STATUS) {
