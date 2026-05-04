@@ -28,8 +28,6 @@ export class ModbusRtuSlave {
 
   private buffer = Buffer.alloc(0);
 
-  private flushTimer: NodeJS.Timeout | null = null;
-
   public constructor(private readonly registers: RegisterMap, private readonly events: ModbusEvents) {}
 
   public async open(path: string, baudRate: number): Promise<void> {
@@ -63,11 +61,6 @@ export class ModbusRtuSlave {
   }
 
   public async close(): Promise<void> {
-    if (this.flushTimer) {
-      clearTimeout(this.flushTimer);
-      this.flushTimer = null;
-    }
-
     if (!this.port) {
       return;
     }
@@ -89,16 +82,28 @@ export class ModbusRtuSlave {
 
   private onData(chunk: Buffer): void {
     this.buffer = Buffer.concat([this.buffer, chunk]);
+    this.processBufferedFrames();
+  }
 
-    if (this.flushTimer) {
-      clearTimeout(this.flushTimer);
+  private processBufferedFrames(): void {
+    const requestLength = 8;
+
+    while (this.buffer.length >= requestLength) {
+      const frame = this.buffer.subarray(0, requestLength);
+
+      if (!ModbusCrc.isValid(frame)) {
+        this.events.onLog('error', `Discarding byte while seeking valid frame boundary: ${toHex(frame.subarray(0, 1))}`);
+        this.buffer = this.buffer.subarray(1);
+        continue;
+      }
+
+      this.buffer = this.buffer.subarray(requestLength);
+      this.processFrame(frame);
     }
 
-    this.flushTimer = setTimeout(() => {
-      const frame = this.buffer;
-      this.buffer = Buffer.alloc(0);
-      this.processFrame(frame);
-    }, 15);
+    if (this.buffer.length > 0 && this.buffer.length < requestLength) {
+      this.events.onLog('info', `Waiting for more data to complete frame: ${toHex(this.buffer)}`);
+    }
   }
 
   private processFrame(frame: Buffer): void {
